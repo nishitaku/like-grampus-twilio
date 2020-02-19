@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "twilio-run",
+    "start": "twilio-run --env",
+    "start:ngrok": "twilio-run --env --ngrok",
     "deploy": "twilio-run deploy"
   },
   "devDependencies": {
@@ -12,5 +13,8 @@
   },
   "engines": {
     "node": "10.17.0"
+  },
+  "dependencies": {
+    "@line/bot-sdk": "^6.8.4"
   }
 }
