@@ -28,6 +28,7 @@
     "@line/bot-sdk": "^6.8.4",
     "date-fns": "^2.9.0",
     "ibm-cos-sdk": "^1.6.0",
+    "jimp": "^0.9.3",
     "request": "^2.88.2",
     "request-promise": "^4.2.5"
   }

@@ -4,9 +4,11 @@ const lineBot = require('@line/bot-sdk');
 const requestPromise = require('request-promise');
 const aws = require('ibm-cos-sdk');
 const dateFns = require('date-fns');
+const jimp = require('jimp');
 
 let botConfig;
 let botClient;
+let cos;
 
 exports.handler = function(context, event, callback) {
   botConfig = {
@@ -24,72 +26,89 @@ exports.handler = function(context, event, callback) {
     throw new Error('body parsing failed');
   }
 
-  body.events.forEach(async webhookData => {
-    const replyToken = webhookData.replyToken;
-    const msgEvtType = webhookData.type;
-    const timeStamp = webhookData.timestamp;
-    const userId = webhookData.source.userId;
-    const messageId = webhookData.message.id;
+  try {
+    body.events.forEach(async webhookData => {
+      const replyToken = webhookData.replyToken;
+      const msgEvtType = webhookData.type;
+      const timeStamp = webhookData.timestamp;
+      const userId = webhookData.source.userId;
+      const messageId = webhookData.message.id;
 
-    // 接続確認
-    if (replyToken === '00000000000000000000000000000000') {
-      console.log('Connection OK');
-      return;
-    }
+      // 接続確認
+      if (replyToken === '00000000000000000000000000000000') {
+        console.log('Connection OK');
+        return;
+      }
 
-    switch (msgEvtType) {
-      case 'follow': // 友達追加時
-        // TODO: 使い方を説明するメッセージを送信
-        break;
+      switch (msgEvtType) {
+        case 'follow': // 友達追加時
+          // TODO: 使い方を説明するメッセージを送信
+          break;
 
-      case 'message': {
-        // メッセージ受信時
-        const messageType = webhookData.message.type;
-        switch (messageType) {
-          case 'text': // テキストメッセージの場合
-            botClient.replyMessage(replyToken, {
-              type: 'text',
-              text: 'textありがとう',
-            });
-            break;
+        case 'message': {
+          // メッセージ受信時
+          const messageType = webhookData.message.type;
+          switch (messageType) {
+            case 'text': // テキストメッセージの場合
+              botClient.replyMessage(replyToken, {
+                type: 'text',
+                text: 'textありがとう',
+              });
+              break;
 
-          case 'image': {
-            // 画像の場合
-            botClient.pushMessage(userId, {
-              type: 'text',
-              text: 'image読込中',
-            });
-            const binImage = await getLineImage(messageId, replyToken);
+            case 'image': {
+              // 画像の場合
+              botClient.pushMessage(userId, {
+                type: 'text',
+                text: 'image読込中',
+              });
+              const binImage = await getLineImage(messageId, replyToken);
 
-            const cos = new aws.S3({
-              endpoint: context.ICOS_ENDPOINT,
-              apiKeyId: context.ICOS_API_KEY,
-              ibmAuthEndpoint: 'https://iam.ng.bluemix.net/oidc/token',
-              serviceInstanceId: context.ICOS_RESOURCE_ID,
-            });
+              if (binImage) {
+                cos = new aws.S3({
+                  endpoint: context.ICOS_ENDPOINT,
+                  apiKeyId: context.ICOS_API_KEY,
+                  ibmAuthEndpoint: 'https://iam.ng.bluemix.net/oidc/token',
+                  serviceInstanceId: context.ICOS_RESOURCE_ID,
+                });
 
-            const filename =
-              dateFns.format(new Date(), 'yyyyMMddHHmmss') + '_grampus.jpeg';
-            const imageUrl = `https://${context.ICOS_BUCKET_NAME}.${context.ICOS_ENDPOINT}/${filename}`;
-            console.log(`url=${imageUrl}`);
+                const now = new Date();
+                const originalFilename =
+                  dateFns.format(now, 'yyyyMMddHHmmss') + '_grampus.jpeg';
+                const originalImageUrl = await putImageToICOS(
+                  context,
+                  originalFilename,
+                  binImage
+                );
 
-            if (binImage) {
-              await cos
-                .putObject({
-                  Bucket: context.ICOS_BUCKET_NAME,
-                  Key: filename,
-                  ContentType: 'image/jpeg',
-                  ACL: 'public-read',
-                  Body: binImage,
-                })
-                .promise();
+                const previewFilename =
+                  dateFns.format(now, 'yyyyMMddHHmmss') +
+                  '_preview_grampus.jpeg';
+                const jimpImage = await jimp.read(binImage);
+                const scaledImage = await jimpImage
+                  .scaleToFit(240, 240)
+                  .getBufferAsync(jimp.MIME_JPEG);
+                const previewImageUrl = await putImageToICOS(
+                  context,
+                  previewFilename,
+                  scaledImage
+                );
+
+                await botClient.replyMessage(replyToken, {
+                  type: 'image',
+                  originalContentUrl: originalImageUrl,
+                  previewImageUrl: previewImageUrl,
+                });
+              }
+              break;
             }
-            break;
           }
         }
       }
-    }
-  });
+    });
+  } catch (error) {
+    console.log(error);
+  }
 
   callback(null, { statusCode: 200 });
 };
@@ -103,20 +122,21 @@ async function getLineImage(messageId, replyToken) {
     },
     encoding: null,
   };
-  let binImage;
-  try {
-    binImage = await requestPromise(options);
-    await botClient.replyMessage(replyToken, {
-      type: 'text',
-      text: '画像取得に成功しました',
-    });
-  } catch (err) {
-    console.log(`getLineImage: error=${err}`);
-    await botClient.replyMessage(replyToken, {
-      type: 'text',
-      text: '画像取得に失敗しました',
-    });
-  }
-
+  const binImage = await requestPromise(options);
   return binImage;
+}
+
+async function putImageToICOS(context, filename, img) {
+  const imageUrl = `https://${context.ICOS_BUCKET_NAME}.${context.ICOS_ENDPOINT}/${filename}`;
+  console.log(`url=${imageUrl}`);
+  await cos
+    .putObject({
+      Bucket: context.ICOS_BUCKET_NAME,
+      Key: filename,
+      ContentType: 'image/jpeg',
+      ACL: 'public-read',
+      Body: img,
+    })
+    .promise();
+  return imageUrl;
 }
