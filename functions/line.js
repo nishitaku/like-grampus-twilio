@@ -12,7 +12,8 @@ let cos;
 
 exports.handler = function(context, event, callback) {
   botConfig = {
-    channelAccessToken: context.LINE_BOT_ACCESS_TOKEN,
+    channelAccessToken:
+      context.LINE_BOT_ACCESS_TOKEN1 + context.LINE_BOT_ACCESS_TOKEN2,
     channelSecret: context.LINE_BOT_CHANNEL_SECRET,
   };
   botClient = new lineBot.Client(botConfig);
