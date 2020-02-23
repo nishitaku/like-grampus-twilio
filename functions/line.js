@@ -31,6 +31,12 @@ exports.handler = function(context, event, callback) {
     const userId = webhookData.source.userId;
     const messageId = webhookData.message.id;
 
+    // 接続確認
+    if (replyToken === '00000000000000000000000000000000') {
+      console.log('Connection OK');
+      return;
+    }
+
     switch (msgEvtType) {
       case 'follow': // 友達追加時
         // TODO: 使い方を説明するメッセージを送信
