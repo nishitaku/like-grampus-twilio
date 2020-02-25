@@ -5,6 +5,8 @@ const requestPromise = require('request-promise');
 const aws = require('ibm-cos-sdk');
 const dateFns = require('date-fns');
 const jimp = require('jimp');
+const VisualRecognitionV3 = require('ibm-watson/visual-recognition/v3');
+const { IamAuthenticator } = require('ibm-watson/auth');
 
 let botConfig;
 let botClient;
@@ -100,6 +102,8 @@ exports.handler = function(context, event, callback) {
                   originalContentUrl: originalImageUrl,
                   previewImageUrl: previewImageUrl,
                 });
+
+                await classifyImageByICVR(context, binImage);
               }
               break;
             }
@@ -140,4 +144,22 @@ async function putImageToICOS(context, filename, img) {
     })
     .promise();
   return imageUrl;
+}
+
+async function classifyImageByICVR(context, img) {
+  const vr = new VisualRecognitionV3({
+    serviceUrl: 'https://api.us-south.visual-recognition.watson.cloud.ibm.com',
+    version: '2018-03-19',
+    authenticator: new IamAuthenticator({ apikey: context.ICVR_API_KEY }),
+  });
+  const params = {
+    imagesFile: img,
+    classifierIds: ['part2_1832529296'],
+    threshold: 0.6,
+  };
+  console.log(`classifyImageByICVR: START`);
+  const response = await vr.classify(params);
+  console.log(
+    `classifyImageByICVR: result=${JSON.stringify(response.result, null, 2)}`
+  );
 }
