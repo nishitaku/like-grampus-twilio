@@ -12,25 +12,24 @@ let botConfig;
 let botClient;
 let cos;
 
-exports.handler = function(context, event, callback) {
-  botConfig = {
-    channelAccessToken:
-      context.LINE_BOT_ACCESS_TOKEN1 + context.LINE_BOT_ACCESS_TOKEN2,
-    channelSecret: context.LINE_BOT_CHANNEL_SECRET,
-  };
-  botClient = new lineBot.Client(botConfig);
-
-  // TODO: HeaderのValidation
-
-  const body = event;
-  // console.log(`body=${JSON.stringify(body)}`);
-
-  if (body === null) {
-    throw new Error('body parsing failed');
-  }
-
+exports.handler = async function(context, event, callback) {
   try {
-    body.events.forEach(async webhookData => {
+    botConfig = {
+      channelAccessToken:
+        context.LINE_BOT_ACCESS_TOKEN1 + context.LINE_BOT_ACCESS_TOKEN2,
+      channelSecret: context.LINE_BOT_CHANNEL_SECRET,
+    };
+    botClient = new lineBot.Client(botConfig);
+
+    // TODO: HeaderのValidation
+
+    const body = event;
+    console.log(`body=${JSON.stringify(body)}`);
+
+    if (body === null) {
+      throw new Error('body parsing failed');
+    }
+    const promises = body.events.map(async webhookData => {
       const replyToken = webhookData.replyToken;
       const msgEvtType = webhookData.type;
       const timeStamp = webhookData.timestamp;
@@ -53,7 +52,7 @@ exports.handler = function(context, event, callback) {
           const messageType = webhookData.message.type;
           switch (messageType) {
             case 'text': // テキストメッセージの場合
-              botClient.replyMessage(replyToken, {
+              await botClient.replyMessage(replyToken, {
                 type: 'text',
                 text: 'textありがとう',
               });
@@ -61,7 +60,7 @@ exports.handler = function(context, event, callback) {
 
             case 'image': {
               // 画像の場合
-              botClient.pushMessage(userId, {
+              await botClient.pushMessage(userId, {
                 type: 'text',
                 text: 'image読込中',
               });
@@ -111,6 +110,7 @@ exports.handler = function(context, event, callback) {
         }
       }
     });
+    await Promise.all(promises);
   } catch (error) {
     console.log(error);
   }
