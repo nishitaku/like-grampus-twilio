@@ -108,6 +108,21 @@ exports.handler = async function(context, event, callback) {
                 );
                 console.log(`classifyResult=${JSON.stringify(classifyResult)}`);
                 const scoreStr = `${classifyResult.score * 100}%`;
+
+                // 選手の画像を送信
+                await botClient.pushMessage(userId, {
+                  type: 'image',
+                  originalContentUrl: getPlayerImagerUrl(
+                    context,
+                    classifyResult.class
+                  ),
+                  previewImageUrl: getPlayerImagerPreviewUrl(
+                    context,
+                    classifyResult.class
+                  ),
+                });
+
+                // 選手のプロフィールを送信
                 await botClient.replyMessage(replyToken, {
                   type: 'text',
                   text: `${classifyResult.playerName} 選手 \n\nソックリ度：${scoreStr}\n\n・ポジション：${classifyResult.position}\n・背番号：${classifyResult.uniformNumber}\n・ニックネーム：${classifyResult.nickName}\n・誕生日：${classifyResult.birthday}\n・出身：${classifyResult.from}\n・身長/体重：${classifyResult.height}/${classifyResult.weight}\n・星座：${classifyResult.constellation}\n・血液型：${classifyResult.bloodType}型`,
@@ -153,6 +168,14 @@ async function putImageToICOS(context, filename, img) {
     })
     .promise();
   return imageUrl;
+}
+
+function getPlayerImagerUrl(context, className) {
+  return `https://${context.ICOS_BUCKET_NAME}.${context.ICOS_ENDPOINT}/${className}.jpg`;
+}
+
+function getPlayerImagerPreviewUrl(context, className) {
+  return `https://${context.ICOS_BUCKET_NAME}.${context.ICOS_ENDPOINT}/${className}_preview.jpg`;
 }
 
 async function classifyImageByICVR(context, img) {
