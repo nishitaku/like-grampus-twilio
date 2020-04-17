@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "twilio-run --env",
+    "start": "twilio-run --env --live",
     "start:ngrok": "twilio-run --env --ngrok --live",
     "deploy": "twilio-run deploy",
     "lint": "eslint . --cache"
@@ -25,6 +25,7 @@
     "node": "10.17.0"
   },
   "dependencies": {
+    "@kintone/rest-api-client": "^1.2.0",
     "@line/bot-sdk": "^6.8.4",
     "date-fns": "^2.9.0",
     "ibm-cos-sdk": "^1.6.0",

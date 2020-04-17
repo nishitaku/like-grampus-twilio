@@ -51,13 +51,18 @@ exports.handler = async function(context, event, callback) {
           // メッセージ受信時
           const messageType = webhookData.message.type;
           switch (messageType) {
-            case 'text': // テキストメッセージの場合
+            case 'text': {
+              // テキストメッセージの場合
+              const kintoneClient = require(Runtime.getFunctions().kintone
+                .path);
+              // const records = await kintoneClient.getRecords();
+              await kintoneClient.addRecord(context);
               await botClient.replyMessage(replyToken, {
                 type: 'text',
                 text: 'textありがとう',
               });
               break;
-
+            }
             case 'image': {
               // 画像の場合
               await botClient.pushMessage(userId, {
