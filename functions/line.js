@@ -58,10 +58,6 @@ exports.handler = async function(context, event, callback) {
             }
             case 'image': {
               // 画像の場合
-              await botClient.pushMessage(userId, {
-                type: 'text',
-                text: 'あなたにソックリな選手は・・・',
-              });
               const binImage = await getLineImage(messageId, botConfig);
 
               if (binImage) {
@@ -72,24 +68,27 @@ exports.handler = async function(context, event, callback) {
                 console.log(`classifyResult=${JSON.stringify(classifyResult)}`);
                 const scoreStr = `${(classifyResult.score * 100).toFixed(1)}%`;
 
-                // 選手の画像を送信
-                await botClient.pushMessage(userId, {
-                  type: 'image',
-                  originalContentUrl: getPlayerImagerUrl(
-                    context,
-                    classifyResult.class
-                  ),
-                  previewImageUrl: getPlayerImagerPreviewUrl(
-                    context,
-                    classifyResult.class
-                  ),
-                });
-
-                // 選手のプロフィールを送信
-                await botClient.replyMessage(replyToken, {
-                  type: 'text',
-                  text: `${classifyResult.playerName} 選手 \n\nソックリ度：${scoreStr}\n\n・ポジション：${classifyResult.position}\n・背番号：${classifyResult.uniformNumber}\n・ニックネーム：${classifyResult.nickName}\n・誕生日：${classifyResult.birthday}\n・出身：${classifyResult.from}\n・身長/体重：${classifyResult.height}/${classifyResult.weight}\n・星座：${classifyResult.constellation}\n・血液型：${classifyResult.bloodType}型`,
-                });
+                await botClient.replyMessage(replyToken, [
+                  {
+                    type: 'text',
+                    text: 'あなたにソックリな選手は・・・',
+                  },
+                  {
+                    type: 'image',
+                    originalContentUrl: getPlayerImagerUrl(
+                      context,
+                      classifyResult.class
+                    ),
+                    previewImageUrl: getPlayerImagerPreviewUrl(
+                      context,
+                      classifyResult.class
+                    ),
+                  },
+                  {
+                    type: 'text',
+                    text: `${classifyResult.playerName} 選手 \n\nソックリ度：${scoreStr}\n\n・ポジション：${classifyResult.position}\n・背番号：${classifyResult.uniformNumber}\n・ニックネーム：${classifyResult.nickName}\n・誕生日：${classifyResult.birthday}\n・出身：${classifyResult.from}\n・身長/体重：${classifyResult.height}/${classifyResult.weight}\n・星座：${classifyResult.constellation}\n・血液型：${classifyResult.bloodType}型`,
+                  },
+                ]);
               }
               break;
             }
