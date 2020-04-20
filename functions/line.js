@@ -5,8 +5,8 @@ const requestPromise = require('request-promise');
 const aws = require('ibm-cos-sdk');
 const dateFns = require('date-fns');
 const jimp = require('jimp');
-const VisualRecognitionV3 = require('ibm-watson/visual-recognition/v3');
-const { IamAuthenticator } = require('ibm-watson/auth');
+const kintoneClient = require(Runtime.getFunctions().kintone.path);
+const icvrClient = require(Runtime.getFunctions().icvr.path);
 
 let botConfig;
 let botClient;
@@ -53,8 +53,7 @@ exports.handler = async function(context, event, callback) {
           switch (messageType) {
             case 'text': {
               // テキストメッセージの場合
-              const kintoneClient = require(Runtime.getFunctions().kintone
-                .path);
+
               // const records = await kintoneClient.getRecords();
               await kintoneClient.addRecord(context);
               await botClient.replyMessage(replyToken, {
@@ -106,8 +105,7 @@ exports.handler = async function(context, event, callback) {
                 //   originalContentUrl: originalImageUrl,
                 //   previewImageUrl: previewImageUrl,
                 // });
-
-                const classifyResult = await classifyImageByICVR(
+                const classifyResult = await icvrClient.classifyImage(
                   context,
                   binImage
                 );
@@ -181,40 +179,4 @@ function getPlayerImagerUrl(context, className) {
 
 function getPlayerImagerPreviewUrl(context, className) {
   return `https://${context.ICOS_BUCKET_NAME}.${context.ICOS_ENDPOINT}/${className}_preview.jpg`;
-}
-
-async function classifyImageByICVR(context, img) {
-  const vr = new VisualRecognitionV3({
-    serviceUrl: 'https://api.us-south.visual-recognition.watson.cloud.ibm.com',
-    version: '2018-03-19',
-    authenticator: new IamAuthenticator({ apikey: context.ICVR_API_KEY }),
-  });
-  const params = {
-    imagesFile: img,
-    classifierIds: ['DefaultCustomModel_2123619983'],
-    threshold: 0.0,
-  };
-  console.log(`classifyImageByICVR: START`);
-  const response = await vr.classify(params);
-  // console.log(
-  //   `classifyImageByICVR: result=${JSON.stringify(response.result, null, 2)}`
-  // );
-  const classes = response.result.images[0].classifiers[0].classes;
-  const highestScoreClass = classes.reduce((pre, cur) =>
-    pre.score > cur.score ? pre : cur
-  );
-  // console.log(
-  //   `classifyImageByICVR: highestScoreClass=${JSON.stringify(
-  //     highestScoreClass
-  //   )}`
-  // );
-  const playerInfoMaster = require(Runtime.getFunctions()['player-info'].path);
-  console.log(Runtime.getFunctions()['player-info'].path);
-  console.log(playerInfoMaster);
-  const playerInfo = playerInfoMaster
-    .getPlayerInfo()
-    .filter(player => player.class === highestScoreClass.class)[0];
-  // console.log(`classifyImageByICVR: playerInfo=${JSON.stringify(playerInfo)}`);
-
-  return Object.assign(playerInfo, highestScoreClass);
 }
