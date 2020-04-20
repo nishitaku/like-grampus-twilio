@@ -1,44 +1,92 @@
+'use strict';
+
 const { KintoneRestAPIClient } = require('@kintone/rest-api-client');
 
-function createClient(context) {
+function createClassifiedAppClient(context) {
   const client = new KintoneRestAPIClient({
     baseUrl: context.KINTONE_BASE_URL,
     auth: {
-      apiToken: context.KINTONE_API_TOKEN,
+      apiToken: context.KINTONE_CLASSIFIED_APP_API_TOKEN,
     },
   });
   return client;
 }
 
-async function getRecords(context) {
-  const client = createClient(context);
+async function getClassifiedAppRecords(context) {
+  const client = createClassifiedAppClient(context);
   const result = await client.record.getRecords({
-    app: context.KINTONE_APP_ID,
+    app: context.KINTONE_CLASSIFIED_APP_ID,
   });
-  console.log(`getRecords result=${JSON.stringify(result)}`);
   return result.records;
 }
 
-async function addRecord(context) {
-  const client = createClient(context);
+async function addClassifiedAppRecord(context, record) {
+  const client = createClassifiedAppClient(context);
   const result = await client.record.addRecord({
-    app: context.KINTONE_APP_ID,
+    app: context.KINTONE_CLASSIFIED_APP_ID,
     record: {
-      line_display_name: {
-        value: 'テストテスト',
+      line_user_id: {
+        value: record.lineUserId,
       },
       class_name: {
-        value: 'test_2',
+        value: record.className,
       },
       score: {
-        value: 0.5,
+        value: record.score,
       },
     },
   });
-  console.log(`addRecord result=${JSON.stringify(result)}`);
+  const records = await getClassifiedAppRecords(context);
+  console.log(`classifiedAppRecords=${JSON.stringify(records)}`);
+  return result;
+}
+
+function createUserClient(context) {
+  const client = new KintoneRestAPIClient({
+    baseUrl: context.KINTONE_BASE_URL,
+    auth: {
+      apiToken: context.KINTONE_USER_APP_API_TOKEN,
+    },
+  });
+  return client;
+}
+
+async function getUserAppRecords(context) {
+  const client = createUserClient(context);
+  const result = await client.record.getRecords({
+    app: context.KINTONE_USER_APP_ID,
+  });
+  return result.records;
+}
+
+async function upsertUserAppRecord(context, record) {
+  const client = createUserClient(context);
+  const result = await client.record.upsertRecord({
+    app: context.KINTONE_USER_APP_ID,
+    updateKey: {
+      field: 'line_user_id',
+      value: record.lineUserId,
+    },
+    record: {
+      line_display_name: {
+        value: record.lineDisplayName,
+      },
+      line_picture_url: {
+        value: record.linePictureUrl,
+      },
+      line_user_language: {
+        value: record.lineUserLanguage,
+      },
+    },
+  });
+  const records = await getUserAppRecords(context);
+  console.log(`classifiedAppRecords=${JSON.stringify(records)}`);
+  return result;
 }
 
 module.exports = {
-  getRecords,
-  addRecord,
+  getClassifiedAppRecords,
+  addClassifiedAppRecord,
+  getUserAppRecords,
+  upsertUserAppRecord,
 };

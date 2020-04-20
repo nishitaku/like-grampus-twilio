@@ -43,13 +43,12 @@ exports.handler = async function(context, event, callback) {
 
         case 'message': {
           // メッセージ受信時
+          const profile = await botClient.getProfile(userId);
+          console.log(`profile=${JSON.stringify(profile)}`);
           const messageType = webhookData.message.type;
           switch (messageType) {
             case 'text': {
               // テキストメッセージの場合
-
-              // const records = await kintoneClient.getRecords();
-              await kintoneClient.addRecord(context);
               await botClient.replyMessage(replyToken, {
                 type: 'text',
                 text: 'textありがとう',
@@ -66,6 +65,27 @@ exports.handler = async function(context, event, callback) {
                   binImage
                 );
                 console.log(`classifyResult=${JSON.stringify(classifyResult)}`);
+
+                // ユーザーDBに追加
+                const userRecord = {
+                  lineUserId: userId,
+                  lineDisplayName: profile.displayName,
+                  linePictureUrl: profile.pictureUrl,
+                  lineUserLanguage: profile.language,
+                };
+                await kintoneClient.upsertUserAppRecord(context, userRecord);
+
+                // 類似度判定DBに追加
+                const classifiedAppRecord = {
+                  lineUserId: userId,
+                  className: classifyResult.class,
+                  score: classifyResult.score,
+                };
+                await kintoneClient.addClassifiedAppRecord(
+                  context,
+                  classifiedAppRecord
+                );
+
                 const scoreStr = `${(classifyResult.score * 100).toFixed(1)}%`;
 
                 await botClient.replyMessage(replyToken, [
