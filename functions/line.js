@@ -2,24 +2,18 @@
 
 const lineBot = require('@line/bot-sdk');
 const requestPromise = require('request-promise');
-const aws = require('ibm-cos-sdk');
-const dateFns = require('date-fns');
-const jimp = require('jimp');
 const kintoneClient = require(Runtime.getFunctions().kintone.path);
 const icvrClient = require(Runtime.getFunctions().icvr.path);
-
-let botConfig;
-let botClient;
-let cos;
+// const icosClient = require(Runtime.getFunctions().icos.path);
 
 exports.handler = async function(context, event, callback) {
   try {
-    botConfig = {
+    const botConfig = {
       channelAccessToken:
         context.LINE_BOT_ACCESS_TOKEN1 + context.LINE_BOT_ACCESS_TOKEN2,
       channelSecret: context.LINE_BOT_CHANNEL_SECRET,
     };
-    botClient = new lineBot.Client(botConfig);
+    const botClient = new lineBot.Client(botConfig);
 
     // TODO: HeaderのValidation
 
@@ -68,43 +62,9 @@ exports.handler = async function(context, event, callback) {
                 type: 'text',
                 text: 'あなたにソックリな選手は・・・',
               });
-              const binImage = await getLineImage(messageId, replyToken);
+              const binImage = await getLineImage(messageId, botConfig);
 
               if (binImage) {
-                cos = new aws.S3({
-                  endpoint: context.ICOS_ENDPOINT,
-                  apiKeyId: context.ICOS_API_KEY,
-                  ibmAuthEndpoint: 'https://iam.ng.bluemix.net/oidc/token',
-                  serviceInstanceId: context.ICOS_RESOURCE_ID,
-                });
-
-                // const now = new Date();
-                // const originalFilename =
-                //   dateFns.format(now, 'yyyyMMddHHmmss') + '_grampus.jpeg';
-                // const originalImageUrl = await putImageToICOS(
-                //   context,
-                //   originalFilename,
-                //   binImage
-                // );
-
-                // const previewFilename =
-                //   dateFns.format(now, 'yyyyMMddHHmmss') +
-                //   '_preview_grampus.jpeg';
-                // const jimpImage = await jimp.read(binImage);
-                // const scaledImage = await jimpImage
-                //   .scaleToFit(240, 240)
-                //   .getBufferAsync(jimp.MIME_JPEG);
-                // const previewImageUrl = await putImageToICOS(
-                //   context,
-                //   previewFilename,
-                //   scaledImage
-                // );
-
-                // await botClient.replyMessage(replyToken, {
-                //   type: 'image',
-                //   originalContentUrl: originalImageUrl,
-                //   previewImageUrl: previewImageUrl,
-                // });
                 const classifyResult = await icvrClient.classifyImage(
                   context,
                   binImage
@@ -145,7 +105,7 @@ exports.handler = async function(context, event, callback) {
   callback(null, { statusCode: 200 });
 };
 
-async function getLineImage(messageId, replyToken) {
+async function getLineImage(messageId, botConfig) {
   const options = {
     url: `https://api.line.me/v2/bot/message/${messageId}/content`,
     method: 'get',
@@ -156,21 +116,6 @@ async function getLineImage(messageId, replyToken) {
   };
   const binImage = await requestPromise(options);
   return binImage;
-}
-
-async function putImageToICOS(context, filename, img) {
-  const imageUrl = `https://${context.ICOS_BUCKET_NAME}.${context.ICOS_ENDPOINT}/${filename}`;
-  console.log(`url=${imageUrl}`);
-  await cos
-    .putObject({
-      Bucket: context.ICOS_BUCKET_NAME,
-      Key: filename,
-      ContentType: 'image/jpeg',
-      ACL: 'public-read',
-      Body: img,
-    })
-    .promise();
-  return imageUrl;
 }
 
 function getPlayerImagerUrl(context, className) {
