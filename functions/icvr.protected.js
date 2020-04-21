@@ -3,6 +3,7 @@
 const VisualRecognitionV3 = require('ibm-watson/visual-recognition/v3');
 const { IamAuthenticator } = require('ibm-watson/auth');
 const playerInfoMaster = require(Runtime.getFunctions()['player-info'].path);
+const debug = require('debug')('grampus:icvr');
 
 async function classifyImage(context, img) {
   const vr = new VisualRecognitionV3({
@@ -15,11 +16,9 @@ async function classifyImage(context, img) {
     classifierIds: ['DefaultCustomModel_2123619983'],
     threshold: 0.0,
   };
-  console.log(`classifyImage: START`);
+  debug(`classifyImage: START`);
   const response = await vr.classify(params);
-  console.log(
-    `classifyImage: result=${JSON.stringify(response.result, null, 2)}`
-  );
+  debug(`classifyImage: result=${JSON.stringify(response.result, null, 2)}`);
   const classes = response.result.images[0].classifiers[0].classes;
   const highestScoreClass = classes.reduce((pre, cur) =>
     pre.score > cur.score ? pre : cur

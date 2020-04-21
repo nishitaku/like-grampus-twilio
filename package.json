@@ -28,6 +28,7 @@
     "@kintone/rest-api-client": "^1.2.0",
     "@line/bot-sdk": "^6.8.4",
     "date-fns": "^2.9.0",
+    "debug": "^4.1.1",
     "ibm-cos-sdk": "^1.6.0",
     "ibm-watson": "^5.4.0",
     "jimp": "^0.9.3",
