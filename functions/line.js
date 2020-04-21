@@ -5,7 +5,8 @@ const requestPromise = require('request-promise');
 const debug = require('debug')('grampus:line');
 const kintoneClient = require(Runtime.getFunctions().kintone.path);
 const icvrClient = require(Runtime.getFunctions().icvr.path);
-// const icosClient = require(Runtime.getFunctions().icos.path);
+const icosClient = require(Runtime.getFunctions().icos.path);
+const dateFns = require('date-fns');
 
 exports.handler = async function(context, event, callback) {
   try {
@@ -89,6 +90,10 @@ exports.handler = async function(context, event, callback) {
                 classifiedAppRecord
               );
 
+              /// 画像をICOSに保存
+              const filename = createICOSImageName(userId);
+              await icosClient.putImage(context, filename, binImage);
+
               const scoreStr = `${(classifyResult.score * 100).toFixed(1)}%`;
 
               replyMessage = [
@@ -143,9 +148,13 @@ async function getLineImage(messageId, botConfig) {
 }
 
 function getPlayerImagerUrl(context, className) {
-  return `https://${context.ICOS_BUCKET_NAME}.${context.ICOS_ENDPOINT}/${className}.jpg`;
+  return `https://${context.ICOS_PLAYER_BUCKET_NAME}.${context.ICOS_ENDPOINT}/${className}.jpg`;
 }
 
 function getPlayerImagerPreviewUrl(context, className) {
-  return `https://${context.ICOS_BUCKET_NAME}.${context.ICOS_ENDPOINT}/${className}_preview.jpg`;
+  return `https://${context.ICOS_PLAYER_BUCKET_NAME}.${context.ICOS_ENDPOINT}/${className}_preview.jpg`;
+}
+
+function createICOSImageName(userId) {
+  return `${userId}_${dateFns.format(new Date(), 'yyyyMMddHHmmss')}.jpg`;
 }
