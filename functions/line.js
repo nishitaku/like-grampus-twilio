@@ -6,7 +6,7 @@ const debug = require('debug')('grampus:line');
 const kintoneClient = require(Runtime.getFunctions().kintone.path);
 const icvrClient = require(Runtime.getFunctions().icvr.path);
 const icosClient = require(Runtime.getFunctions().icos.path);
-const dateFns = require('date-fns');
+const crypto = require('crypto');
 
 exports.handler = async function(context, event, callback) {
   try {
@@ -162,5 +162,11 @@ function getPlayerImagerPreviewUrl(context, className) {
 }
 
 function createICOSImageName(userId) {
-  return `${userId}_${dateFns.format(new Date(), 'yyyyMMddHHmmss')}.jpg`;
+  // ランダムな文字列からファイル名を生成する
+  const length = 30;
+  const randomStr = crypto
+    .randomBytes(length)
+    .toString('hex')
+    .substring(0, length);
+  return `${randomStr}.jpg`;
 }
