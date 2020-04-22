@@ -64,11 +64,20 @@ exports.handler = async function(context, event, callback) {
             const binImage = await getLineImage(messageId, botConfig);
 
             if (binImage) {
+              // 画像を判定
               const classifyResult = await icvrClient.classifyImage(
                 context,
                 binImage
               );
               debug(`classifyResult=${JSON.stringify(classifyResult)}`);
+
+              // 画像をICOSに保存
+              const filename = createICOSImageName(userId);
+              const imageUrl = await icosClient.putImage(
+                context,
+                filename,
+                binImage
+              );
 
               // ユーザーDBに追加
               const userRecord = {
@@ -84,15 +93,12 @@ exports.handler = async function(context, event, callback) {
                 lineUserId: userId,
                 className: classifyResult.class,
                 score: classifyResult.score,
+                imageUrl,
               };
               await kintoneClient.addClassifiedAppRecord(
                 context,
                 classifiedAppRecord
               );
-
-              /// 画像をICOSに保存
-              const filename = createICOSImageName(userId);
-              await icosClient.putImage(context, filename, binImage);
 
               const scoreStr = `${(classifyResult.score * 100).toFixed(1)}%`;
 

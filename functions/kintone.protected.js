@@ -35,6 +35,9 @@ async function addClassifiedAppRecord(context, record) {
       score: {
         value: record.score,
       },
+      image_url: {
+        value: record.imageUrl,
+      },
     },
   });
   const records = await getClassifiedAppRecords(context);
