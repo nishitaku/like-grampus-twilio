@@ -100,28 +100,18 @@ exports.handler = async function(context, event, callback) {
                 classifiedAppRecord
               );
 
-              const scoreStr = `${(classifyResult.score * 100).toFixed(1)}%`;
+              const scoreStr = `${(classifyResult.score * 100).toFixed(1)} 点`;
 
               replyMessage = [
                 {
                   type: 'text',
-                  text: 'あなたにソックリな選手は・・・',
+                  text: 'あなたにそっくりな選手は・・・',
                 },
-                {
-                  type: 'image',
-                  originalContentUrl: getPlayerImagerUrl(
-                    context,
-                    classifyResult.class
-                  ),
-                  previewImageUrl: getPlayerImagerPreviewUrl(
-                    context,
-                    classifyResult.class
-                  ),
-                },
-                {
-                  type: 'text',
-                  text: `${classifyResult.playerName} 選手 \n\nソックリ度：${scoreStr}\n\n・ポジション：${classifyResult.position}\n・背番号：${classifyResult.uniformNumber}\n・ニックネーム：${classifyResult.nickName}\n・誕生日：${classifyResult.birthday}\n・出身：${classifyResult.from}\n・身長/体重：${classifyResult.height}/${classifyResult.weight}\n・星座：${classifyResult.constellation}\n・血液型：${classifyResult.bloodType}型`,
-                },
+                createFlexMessage(
+                  getPlayerImagerUrl(context, classifyResult.class),
+                  classifyResult,
+                  scoreStr
+                ),
               ];
             }
             break;
@@ -169,4 +159,237 @@ function createICOSImageName(userId) {
     .toString('hex')
     .substring(0, length);
   return `${randomStr}.jpg`;
+}
+
+function createFlexMessage(playerImageUrl, classifyResult, scoreStr) {
+  return {
+    type: 'flex',
+    altText: 'This is a Flex Message',
+    contents: {
+      type: 'bubble',
+      hero: {
+        type: 'image',
+        url: playerImageUrl,
+        size: 'full',
+        aspectRatio: '20:13',
+        aspectMode: 'cover',
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        spacing: 'md',
+        contents: [
+          {
+            type: 'text',
+            text: `${classifyResult.playerName} 選手`,
+            wrap: true,
+            weight: 'bold',
+            gravity: 'center',
+            size: 'xl',
+          },
+          {
+            type: 'box',
+            layout: 'baseline',
+            contents: [
+              {
+                type: 'text',
+                text: 'そっくりスコア',
+                flex: 1,
+              },
+              {
+                type: 'text',
+                text: scoreStr,
+                flex: 1,
+              },
+            ],
+            spacing: 'sm',
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            margin: 'lg',
+            spacing: 'sm',
+            contents: [
+              {
+                type: 'box',
+                layout: 'baseline',
+                spacing: 'sm',
+                contents: [
+                  {
+                    type: 'text',
+                    text: 'ポジション',
+                    color: '#aaaaaa',
+                    size: 'sm',
+                    flex: 1,
+                  },
+                  {
+                    type: 'text',
+                    text: classifyResult.position,
+                    wrap: true,
+                    size: 'sm',
+                    color: '#666666',
+                    flex: 1,
+                  },
+                ],
+              },
+              {
+                type: 'box',
+                layout: 'baseline',
+                spacing: 'sm',
+                contents: [
+                  {
+                    type: 'text',
+                    text: '背番号',
+                    color: '#aaaaaa',
+                    size: 'sm',
+                    flex: 1,
+                  },
+                  {
+                    type: 'text',
+                    text: classifyResult.uniformNumber,
+                    wrap: true,
+                    color: '#666666',
+                    size: 'sm',
+                    flex: 1,
+                  },
+                ],
+              },
+              {
+                type: 'box',
+                layout: 'baseline',
+                spacing: 'sm',
+                contents: [
+                  {
+                    type: 'text',
+                    text: 'ニックネーム',
+                    color: '#aaaaaa',
+                    size: 'sm',
+                    flex: 1,
+                  },
+                  {
+                    type: 'text',
+                    text: classifyResult.nickName,
+                    wrap: true,
+                    color: '#666666',
+                    size: 'sm',
+                    flex: 1,
+                  },
+                ],
+              },
+              {
+                type: 'box',
+                layout: 'baseline',
+                spacing: 'sm',
+                contents: [
+                  {
+                    type: 'text',
+                    text: '誕生日',
+                    color: '#aaaaaa',
+                    size: 'sm',
+                    flex: 1,
+                  },
+                  {
+                    type: 'text',
+                    text: classifyResult.birthday,
+                    wrap: true,
+                    color: '#666666',
+                    size: 'sm',
+                    flex: 1,
+                  },
+                ],
+              },
+              {
+                type: 'box',
+                layout: 'baseline',
+                spacing: 'sm',
+                contents: [
+                  {
+                    type: 'text',
+                    text: '出身',
+                    color: '#aaaaaa',
+                    size: 'sm',
+                    flex: 1,
+                  },
+                  {
+                    type: 'text',
+                    text: classifyResult.from,
+                    wrap: true,
+                    color: '#666666',
+                    size: 'sm',
+                    flex: 1,
+                  },
+                ],
+              },
+              {
+                type: 'box',
+                layout: 'baseline',
+                spacing: 'sm',
+                contents: [
+                  {
+                    type: 'text',
+                    text: '身長/体重',
+                    color: '#aaaaaa',
+                    size: 'sm',
+                    flex: 1,
+                  },
+                  {
+                    type: 'text',
+                    text: `${classifyResult.height}/${classifyResult.weight}`,
+                    wrap: true,
+                    color: '#666666',
+                    size: 'sm',
+                    flex: 1,
+                  },
+                ],
+              },
+              {
+                type: 'box',
+                layout: 'baseline',
+                spacing: 'sm',
+                contents: [
+                  {
+                    type: 'text',
+                    text: '星座',
+                    color: '#aaaaaa',
+                    size: 'sm',
+                    flex: 1,
+                  },
+                  {
+                    type: 'text',
+                    text: classifyResult.constellation,
+                    wrap: true,
+                    color: '#666666',
+                    size: 'sm',
+                    flex: 1,
+                  },
+                ],
+              },
+              {
+                type: 'box',
+                layout: 'baseline',
+                spacing: 'sm',
+                contents: [
+                  {
+                    type: 'text',
+                    text: '血液型',
+                    color: '#aaaaaa',
+                    size: 'sm',
+                    flex: 1,
+                  },
+                  {
+                    type: 'text',
+                    text: classifyResult.bloodType,
+                    wrap: true,
+                    color: '#666666',
+                    size: 'sm',
+                    flex: 1,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    },
+  };
 }
