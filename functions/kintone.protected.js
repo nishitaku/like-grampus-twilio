@@ -1,7 +1,6 @@
 'use strict';
 
 const { KintoneRestAPIClient } = require('@kintone/rest-api-client');
-const debug = require('debug')('grampus:kintone');
 
 function createClassifiedAppClient(context) {
   const client = new KintoneRestAPIClient({
@@ -41,7 +40,7 @@ async function addClassifiedAppRecord(context, record) {
     },
   });
   const records = await getClassifiedAppRecords(context);
-  debug(`classifiedAppRecords=${JSON.stringify(records)}`);
+  // console.log(`classifiedAppRecords=${JSON.stringify(records)}`);
   return result;
 }
 
@@ -84,7 +83,7 @@ async function upsertUserAppRecord(context, record) {
     },
   });
   const records = await getUserAppRecords(context);
-  debug(`classifiedAppRecords=${JSON.stringify(records)}`);
+  // console.log(`classifiedAppRecords=${JSON.stringify(records)}`);
   return result;
 }
 

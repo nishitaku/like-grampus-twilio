@@ -1,7 +1,6 @@
 'use strict';
 
 const icos = require('ibm-cos-sdk');
-const debug = require('debug')('grampus:icos');
 
 function createClient(context) {
   const client = new icos.S3({
@@ -16,7 +15,7 @@ function createClient(context) {
 async function putImage(context, filename, img) {
   const client = createClient(context);
   const imageUrl = `https://${context.ICOS_UPLOAD_BUCKET_NAME}.${context.ICOS_ENDPOINT}/${filename}`;
-  debug(`putImage: url=${imageUrl}`);
+  // console.log(`putImage: url=${imageUrl}`);
   await client
     .putObject({
       Bucket: context.ICOS_UPLOAD_BUCKET_NAME,
