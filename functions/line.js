@@ -2,7 +2,6 @@
 
 const lineBot = require('@line/bot-sdk');
 const requestPromise = require('request-promise');
-const debug = require('debug')('grampus:line');
 const kintoneClient = require(Runtime.getFunctions().kintone.path);
 const icvrClient = require(Runtime.getFunctions().icvr.path);
 const icosClient = require(Runtime.getFunctions().icos.path);
@@ -20,7 +19,7 @@ exports.handler = async function(context, event, callback) {
     // TODO: HeaderのValidation
 
     const body = event;
-    debug(`body=${JSON.stringify(body)}`);
+    console.log(`body=${JSON.stringify(body)}`);
 
     if (body === null) {
       throw new Error('body parsing failed');
@@ -37,7 +36,7 @@ exports.handler = async function(context, event, callback) {
         replyToken === '00000000000000000000000000000000' ||
         replyToken === 'ffffffffffffffffffffffffffffffff'
       ) {
-        debug('Connection OK');
+        console.log('Connection OK');
         return;
       }
 
@@ -46,7 +45,7 @@ exports.handler = async function(context, event, callback) {
       if (msgEvtType === 'message') {
         // メッセージ受信時
         const profile = await botClient.getProfile(userId);
-        debug(`profile=${JSON.stringify(profile)}`);
+        console.log(`profile=${JSON.stringify(profile)}`);
 
         const messageType = webhookData.message.type;
         switch (messageType) {
@@ -69,7 +68,7 @@ exports.handler = async function(context, event, callback) {
                 context,
                 binImage
               );
-              debug(`classifyResult=${JSON.stringify(classifyResult)}`);
+              console.log(`classifyResult=${JSON.stringify(classifyResult)}`);
 
               // 画像をICOSに保存
               const filename = createICOSImageName(userId);
@@ -125,7 +124,7 @@ exports.handler = async function(context, event, callback) {
 
     await Promise.all(promises);
   } catch (error) {
-    debug(error);
+    console.error(error);
   }
   callback(null, { statusCode: 200 });
 };
