@@ -53,7 +53,7 @@ exports.handler = async function(context, event, callback) {
             // テキストメッセージの場合
             replyMessage = {
               type: 'text',
-              text: 'textありがとう',
+              text: 'text thank you',
             };
             break;
           }
