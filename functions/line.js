@@ -27,7 +27,6 @@ exports.handler = async function(context, event, callback) {
     const promises = body.events.map(async webhookData => {
       const replyToken = webhookData.replyToken;
       const msgEvtType = webhookData.type;
-      const timeStamp = webhookData.timestamp;
       const userId = webhookData.source.userId;
       const messageId = webhookData.message.id;
 
@@ -51,10 +50,12 @@ exports.handler = async function(context, event, callback) {
         switch (messageType) {
           case 'text': {
             // テキストメッセージの場合
-            replyMessage = {
-              type: 'text',
-              text: 'text thank you',
-            };
+            if (webhookData.message.text === 'test') {
+              replyMessage = {
+                type: 'text',
+                text: 'Server processing...',
+              };
+            }
             break;
           }
 
